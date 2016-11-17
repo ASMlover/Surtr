@@ -1,0 +1,12 @@
+*.swp
+*.pyc
+*.pyo
+*.out
+*.o
+*.exe
+*.obj
+*.pdb
+*.manifest
+*.exp
+*.ilk
+*.idb
