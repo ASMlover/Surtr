@@ -1,7 +1,7 @@
 # **Surtr.Script: Configure Script for Surtr**
 ***
 
-## **What is `Surtr.Script`**
+## **What is `Surtr.Script`?**
   **`Surtr.Script` is a script language for configuring `Surtr`.**
 
   * Written in Python(2/3).
