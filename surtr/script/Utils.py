@@ -27,50 +27,16 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-import Utils
+import sys
 
-TokenType = Utils.enum_def(
-    'ERROR',
-    'EOF',
+if sys.version_info.major < 3:
+    import codecs
+    def do_open(fname, mode='r', encoding='utf-8'):
+        return codecs.open(fname, mode=mode, encoding=encoding)
+else:
+    do_open = open
 
-    # syntax symbols
-    'COMMENT', # `#` - only line comment
-    'LPAREN', # `(`
-    'RPAREN', # `)`
-    'COMMA', # `,`
-
-    # syntax reserved keywords
-
-    # custom definitons
-    'STRING', # const string
-    'IDENTIFIER', # user identifier (variables or functions)
-)
-
-TokenNames = {
-    TokenType.ERROR: '<ERROR>',
-    TokenType.EOF: '<EOF>',
-
-    TokenType.COMMENT: '<COMMENT>',
-    TokenType.LPAREN: '<LPAREN>',
-    TokenType.RPAREN: '<RPAREN>',
-    TokenType.COMMA: '<COMMA>',
-
-    TokenType.STRING: '<STRING>',
-    TokenType.IDENTIFIER: '<IDENTIFIER>',
-}
-
-class Token(object):
-    def __init__(self, text, type=TokenType.ERROR, line=0):
-        self.value = text
-        self.type = type
-        self.line = line
-
-    def __str__(self):
-        type_text = TokenNames.get(self.type, '<INVALID>')
-        return '>>>>>>>>>> {value: "%s", type: %s, line: %d}' % (self.value, type_text, self.line)
-
-class Lexer(object):
-    pass
-
-if __name__ == '__main__':
-    print (Token('print', TokenType.IDENTIFIER, 0))
+def enum_def(*keys):
+    class _EnumTypes(tuple):
+        __getattr__ = tuple.index
+    return _EnumTypes(keys)
