@@ -47,53 +47,59 @@ TokenType = Utils.enum_def(
 )
 
 TokenNames = {
-    TokenType.ERROR: '<ERROR>',
-    TokenType.EOF: '<EOF>',
+    TokenType.ERROR: 'TK_ERROR',
+    TokenType.EOF: 'TK_EOF',
 
-    TokenType.COMMENT: '<COMMENT>',
-    TokenType.LPAREN: '<LPAREN>',
-    TokenType.RPAREN: '<RPAREN>',
-    TokenType.COMMA: '<COMMA>',
+    TokenType.COMMENT: 'TK_COMMENT',
+    TokenType.LPAREN: 'TK_LPAREN',
+    TokenType.RPAREN: 'TK_RPAREN',
+    TokenType.COMMA: 'TK_COMMA',
 
-    TokenType.STRING: '<STRING>',
-    TokenType.IDENTIFIER: '<IDENTIFIER>',
+    TokenType.STRING: 'TK_STRING',
+    TokenType.IDENTIFIER: 'TK_IDENTIFIER',
 }
 
 class Token(object):
-    def __init__(self, text, type=TokenType.ERROR, line=0):
+    def __init__(self, text, type=TokenType.ERROR, line=0, col=0):
         self.value = text
         self.type = type
         self.line = line
+        self.col = col
 
     def __str__(self):
-        type_text = TokenNames.get(self.type, '<INVALID>')
-        return '>>>>>>>>>> {value: "%s", type: %s, line: %d}' % (self.value, type_text, self.line)
+        type_text = TokenNames.get(self.type, 'TK_INVALID')
+        return '|%s|%s|%s|%s|' % (self.value.center(32),
+                type_text.center(16), str(self.line).center(8), str(self.col).center(8))
 
 class LexerException(Exception):
-    def __init__(self, message, lineno):
+    def __init__(self, message, lineno, column):
         self.message = message
         self.lineno = lineno
+        self.column = column
 
     def __str__(self):
-        return 'Error at line(%d) - %s' % (self.lineno, self.message)
+        return 'Error at line(%d:%d) - %s' % (self.lineno, self.column, self.message)
 
 class Lexer(object):
     def __init__(self, content=''):
         self.content = content
-        self.pos = 0
+        self.lexpos = 0
         self.lineno = 1
+        self.column = 0
 
     def get_char(self):
-        if self.pos >= len(self.content):
+        if self.lexpos >= len(self.content):
             return None
 
-        c = self.content[self.pos]
-        self.pos += 1
+        c = self.content[self.lexpos]
+        self.lexpos += 1
+        self.column += 1
         return c
 
     def unget_char(self):
-        assert self.pos > 0, 'Lexer pos can not be neigative'
-        self.pos -= 1
+        assert self.lexpos > 0, 'Lexer posistion can not be neigative'
+        self.lexpos -= 1
+        self.column -= 1
 
     def skip_line_comment(self):
         while True:
@@ -103,10 +109,12 @@ class Lexer(object):
                     if c == '\r' and self.get_char() != '\n':
                         self.unget_char()
                     self.lineno += 1
+                    self.column = 0
                 break
 
     def get_string(self):
         char_list = []
+        begin_col = self.column
         while True:
             c = self.get_char()
             if c is None or c == '\r' or c == '\n':
@@ -114,21 +122,20 @@ class Lexer(object):
                     self.unget_char()
                 raise LexerException('need close const string symbol `"`', self.lineno)
             elif c == '"':
-                return Token(''.join(char_list), TokenType.STRING, self.lineno)
+                return Token(''.join(char_list), TokenType.STRING, self.lineno, begin_col)
             else:
                 char_list.append(c)
 
-    def get_identifier(self):
-        self.unget_char()
-
+    def get_identifier(self, c):
         char_list = []
+        begin_col = self.column
         while True:
-            c = self.get_char()
             if str.isalnum(c) or c == '_':
                 char_list.append(c)
             else:
                 self.unget_char()
-                return Token(''.join(char_list), TokenType.IDENTIFIER, self.lineno)
+                return Token(''.join(char_list), TokenType.IDENTIFIER, self.lineno, begin_col)
+            c = self.get_char()
 
     def get_token(self):
         while True:
@@ -141,30 +148,36 @@ class Lexer(object):
                 if self.get_char() != '\n':
                     self.unget_char()
                 self.lineno += 1
+                self.column = 0
             elif c == '\n':
                 self.lineno += 1
+                self.column = 0
             elif c == '#':
                 self.skip_line_comment()
             elif c == '"':
                 return self.get_string()
             elif str.isalpha(c) or c == '_':
-                return self.get_identifier()
+                return self.get_identifier(c)
             elif c == ',':
-                return Token(',', TokenType.COMMA, self.lineno)
+                return Token(',', TokenType.COMMA, self.lineno, self.column)
             elif c == '(':
-                return Token('(', TokenType.LPAREN, self.lineno)
+                return Token('(', TokenType.LPAREN, self.lineno, self.column)
             elif c == ')':
-                return Token(')', TokenType.RPAREN, self.lineno)
+                return Token(')', TokenType.RPAREN, self.lineno, self.column)
             else:
-                return Token(None, TokenType.ERROR, self.lineno)
+                return Token(None, TokenType.ERROR, self.lineno, self.column)
 
 if __name__ == '__main__':
     with Utils.do_open("demo.su", mode='r', encoding='utf-8') as fp:
         content = fp.read()
         lex = Lexer(content)
 
+        index = 0
+        print ('+%s+%s+%s+%s+%s+' % ('NUM'.center(4), 'IDENTIFIER'.center(32),
+            'TOKEN'.center(16), 'ROW'.center(8), 'COL'.center(8)))
         while True:
             tok = lex.get_token()
             if tok.type in (TokenType.ERROR, TokenType.EOF):
                 break
-            print (tok)
+            print ('|%s%s' % (str(index).center(4), tok))
+            index += 1
