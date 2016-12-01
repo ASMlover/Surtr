@@ -32,9 +32,9 @@ import sys
 
 # get encoding file for writing
 if sys.version_info.major < 3:
-	wopen = io.open
+    wopen = io.open
 else:
-	wopen = open
+    wopen = open
 
 def enum_def(*keys):
     class _EnumTypes(tuple):
