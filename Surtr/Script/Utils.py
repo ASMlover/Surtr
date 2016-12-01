@@ -28,8 +28,13 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 import io
+import sys
 
-do_open = io.open
+# get encoding file for writing
+if sys.version_info.major < 3:
+	wopen = io.open
+else:
+	wopen = open
 
 def enum_def(*keys):
     class _EnumTypes(tuple):
