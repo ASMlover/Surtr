@@ -101,6 +101,13 @@ class Lexer(object):
         self.lexpos -= 1
         self.column -= 1
 
+    def make_token(self, tok_type, value=None, line=None, col=None):
+        if line is None:
+            line = self.lineno
+        if col is None:
+            col = self.column
+        return Token(value, tok_type, line, col)
+
     def skip_line_comment(self):
         while True:
             c = self.get_char()
@@ -116,7 +123,7 @@ class Lexer(object):
             if c is None or c == '\n':
                 raise LexerException('need close const string symbol `"`', self.lineno)
             elif c == '"':
-                return Token(''.join(char_list), TokenType.STRING, self.lineno, begin_col)
+                return self.make_token(TokenType.STRING, ''.join(char_list), col=begin_col)
             else:
                 char_list.append(c)
 
@@ -128,14 +135,14 @@ class Lexer(object):
                 char_list.append(c)
             else:
                 self.unget_char()
-                return Token(''.join(char_list), TokenType.IDENTIFIER, self.lineno, begin_col)
+                return self.make_token(TokenType.IDENTIFIER, ''.join(char_list), col=begin_col)
             c = self.get_char()
 
     def get_token(self):
         while True:
             c = self.get_char()
             if c is None:
-                return Token(None, TokenType.EOF, self.lineno, self.column)
+                return self.make_token(TokenType.EOF)
             elif c in (' ', '\t',):
                 continue
             elif c == '\n':
@@ -148,13 +155,13 @@ class Lexer(object):
             elif str.isalpha(c) or c == '_':
                 return self.get_identifier(c)
             elif c == ',':
-                return Token(',', TokenType.COMMA, self.lineno, self.column)
+                return self.make_token(TokenType.COMMA, c)
             elif c == '(':
-                return Token('(', TokenType.LPAREN, self.lineno, self.column)
+                return self.make_token(TokenType.LPAREN, c)
             elif c == ')':
-                return Token(')', TokenType.RPAREN, self.lineno, self.column)
+                return self.make_token(TokenType.RPAREN, c)
             else:
-                return Token(None, TokenType.ERROR, self.lineno, self.column)
+                return self.make_token(TokenType.ERROR)
 
 if __name__ == '__main__':
     with Utils.do_open("demo.su", mode='r', encoding='utf-8') as fp:
