@@ -27,14 +27,9 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-import sys
+import io
 
-if sys.version_info.major < 3:
-    import codecs
-    def do_open(fname, mode='r', encoding='utf-8'):
-        return codecs.open(fname, mode=mode, encoding=encoding)
-else:
-    do_open = open
+do_open = io.open
 
 def enum_def(*keys):
     class _EnumTypes(tuple):

@@ -164,8 +164,8 @@ class Lexer(object):
                 return self.make_token(TokenType.ERROR)
 
 if __name__ == '__main__':
-    with Utils.do_open("demo.su", mode='r', encoding='utf-8') as fp:
-        content = fp.read().encode('utf-8')
+    with Utils.do_open("demo.su", mode='rb') as fp:
+        content = fp.read()
         lex = Lexer(content)
 
         index = 0
