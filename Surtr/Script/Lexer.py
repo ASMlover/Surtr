@@ -104,12 +104,8 @@ class Lexer(object):
     def skip_line_comment(self):
         while True:
             c = self.get_char()
-            if c is None or c == '\r' or c == '\n':
-                if c == '\r' or c == '\n':
-                    if c == '\r' and self.get_char() != '\n':
-                        self.unget_char()
-                    self.lineno += 1
-                    self.column = 0
+            if c is None or c == '\n':
+                self.unget_char()
                 break
 
     def get_string(self):
@@ -117,9 +113,7 @@ class Lexer(object):
         begin_col = self.column
         while True:
             c = self.get_char()
-            if c is None or c == '\r' or c == '\n':
-                if c == '\r' and self.get_char() != '\n':
-                    self.unget_char()
+            if c is None or c == '\n':
                 raise LexerException('need close const string symbol `"`', self.lineno)
             elif c == '"':
                 return Token(''.join(char_list), TokenType.STRING, self.lineno, begin_col)
@@ -141,14 +135,9 @@ class Lexer(object):
         while True:
             c = self.get_char()
             if c is None:
-                return Token(None, TokenType.EOF, self.lineno)
+                return Token(None, TokenType.EOF, self.lineno, self.column)
             elif c in (' ', '\t',):
                 continue
-            elif c == '\r':
-                if self.get_char() != '\n':
-                    self.unget_char()
-                self.lineno += 1
-                self.column = 0
             elif c == '\n':
                 self.lineno += 1
                 self.column = 0
@@ -169,7 +158,7 @@ class Lexer(object):
 
 if __name__ == '__main__':
     with Utils.do_open("demo.su", mode='r', encoding='utf-8') as fp:
-        content = fp.read()
+        content = fp.read().encode('utf-8')
         lex = Lexer(content)
 
         index = 0
