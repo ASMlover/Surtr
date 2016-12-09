@@ -164,7 +164,7 @@ class Lexer(object):
                 return self.make_token(TokenType.ERROR)
 
 if __name__ == '__main__':
-    with open("demo.su", mode='r') as fp:
+    with open("demo.sc", mode='r') as fp:
         content = fp.read()
         lex = Lexer(content)
 
